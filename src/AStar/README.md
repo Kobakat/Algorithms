@@ -41,7 +41,7 @@ for (int i = 0; i < gridLength; i++)
 }
 ```
 
-![Grid](https://github.com/Kobakat/Algorithms/blob/main/imgdump/Grid.png)
+![Grid](https://github.com/Kobakat/Algorithms/blob/master/imgdump/Grid.png)
 
 The next thing we need are some obstacles. If we just randomly select any elements, we may end up selecting duplicates.
 To get around this efficently, just resize our availableNodes vector from earlier and shrink the amount of elements after removing the selected grid space.
@@ -58,7 +58,7 @@ for (int i = 0; i < obstructions; i++)
 }
 ```
 
-![Barriers](https://github.com/Kobakat/Algorithms/blob/main/imgdump/Barriers.png)
+![Barriers](https://github.com/Kobakat/Algorithms/blob/master/imgdump/Barriers.png)
 
 All thats left is to select two more random spaces as our start and end point. Fortunately thats easy enough as we just re-use the barrier generation code.
 
@@ -99,7 +99,7 @@ std::vector<int32_t> AStar::GetNeighbors(const Node n) const
 }
 ```
 
-![Neighboring Cells](https://github.com/Kobakat/Algorithms/blob/main/imgdump/Neighor.gif)
+![Neighboring Cells](https://github.com/Kobakat/Algorithms/blob/master/imgdump/Neighbor.gif)
 
 
 ## Finding the shortest path
