@@ -2,25 +2,27 @@
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-#include "Node.h"
+
+class Node;
+class AStarGrid;
+class AStarSolver;
 
 class AStar : public olc::PixelGameEngine
 {
 public:
 	AStar();
 
-	int32_t gridLength;
-	int32_t selectedNode;
-
-	std::vector<Node> grid;
-
 	bool OnUserCreate() override;
 	bool OnUserUpdate(float fDeltaTime) override;
+	bool OnUserDestroy() override;
+	
+	void DrawNode(Node* const n);
+	
+	AStarGrid* grid;
+	AStarSolver* solver;
 
-	void GenerateGrid();
-	void DrawNode(Node n);
-	std::vector<int32_t> GetNeighbors(const Node n) const;
-
+	int32_t nodeSize;
+	int32_t debugNodeIndex;
 private:
-	void HandleMovement();
+	void DebugNode();
 };

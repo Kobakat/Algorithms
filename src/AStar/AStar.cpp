@@ -1,4 +1,7 @@
 #include "AStar.h"
+#include "AStarSolver.h"
+#include "AStarGrid.h"
+#include "Node.h"
 
 //tired of typing olc::
 const olc::Pixel white = olc::Pixel(olc::WHITE);
@@ -9,13 +12,23 @@ const olc::Pixel blue = olc::Pixel(olc::BLUE);
 AStar::AStar()
 {
 	sAppName = "A* Pathfinding"; 
-	gridLength = 10;
-	selectedNode = 0;
 }
 
 bool AStar::OnUserCreate()
 {
-	GenerateGrid();
+	nodeSize = 40;
+	srand(time(nullptr));
+
+	grid = new AStarGrid(20, 20, 40);
+	solver = new AStarSolver();
+	
+	return true;
+}
+
+bool AStar::OnUserDestroy()
+{
+	delete grid;
+	delete solver;
 	return true;
 }
 
@@ -23,99 +36,31 @@ bool AStar::OnUserUpdate(float fDeltaTime)
 {
 	if (GetKey(olc::Key::G).bPressed)
 	{
-		GenerateGrid();
+		grid->GenerateGrid();
 	}
 
-	for (Node n : grid)
+	if (GetKey(olc::Key::S).bPressed)
+	{
+		solver->Solve(grid);
+		solver->SetPath();
+	}
+
+	for (Node* n : grid->grid)
 	{
 		DrawNode(n);
 	}
 
-	HandleMovement();
+	DebugNode();
 
 	return true;
 }
 
-void AStar::GenerateGrid()
-{
-	const int32_t sideLength = 80;
-	const int32_t obstructions = 20;
 
-	const int32_t gridSize = gridLength * gridLength;
-
-	grid.clear();
-	grid.reserve(gridSize);
-
-	std::vector<int32_t> availableNodes;
-	availableNodes.reserve(gridSize);
-
-	srand(time(NULL));
-
-	//Generate grid
-	for (int i = 0; i < gridLength; i++)
-	{
-		for (int j = 0; j < gridLength; j++)
-		{
-			grid.push_back(Node(j, i, sideLength, sideLength));
-			availableNodes.push_back(j+(i*10));
-		}
-	}
-
-	//Assign random obstructions
-	for (int i = 0; i < obstructions; i++)
-	{		
-		const int32_t size = availableNodes.size() - 1;
-		const int32_t random = rand() % size;
-	
-		grid[availableNodes[random]].SetType(NodeType::Block);
-		availableNodes.erase(availableNodes.begin() + random);
-	}
-
-	//Assign a random starting point and add it to the open node list
-	int32_t random = rand() % (availableNodes.size() - 1);
-	const int32_t startIndex = availableNodes[random];
-	grid[startIndex].SetType(NodeType::Target);
-	availableNodes.erase(availableNodes.begin() + random);
-	
-	//Assign a random end point and mark its index as the target
-	random = rand() % (availableNodes.size() - 1);
-	const int32_t endIndex = availableNodes[random];
-	grid[availableNodes[random]].SetType(NodeType::Target);
-	availableNodes.erase(availableNodes.begin() + random);
-}
-
-std::vector<int32_t> AStar::GetNeighbors(const Node n) const
-{
-	std::vector<int32_t> neighbors;
-
-	int x = 0;
-	int y = 0;
-
-	for (int i = -1; i < 2; i++)
-	{
-		for (int j = -1; j < 2; j++)
-		{
-			x = j + n.x;
-			y = i + n.y;
-
-			if (x < 0 || y < 0 || x > gridLength - 1 || y > gridLength - 1) continue; // dont go out of bounds
-			if (j == 0 && i == 0) continue; // dont select ourselves
-
-			const int index = (y * 10) + x;
-			if (grid[index].GetType() == NodeType::Block) continue; //dont accept blocks
-
-			neighbors.push_back(index);
-		}
-	}
-
-	return neighbors;
-}
-
-void AStar::DrawNode(Node n)
+void AStar::DrawNode(Node* const n)
 {
 	olc::Pixel color = white;
 
-	switch (n.GetType())
+	switch (n->GetType())
 	{
 	case NodeType::Empty:
 		color = white;
@@ -131,77 +76,81 @@ void AStar::DrawNode(Node n)
 		break;
 	}
 
-	const int32_t x = n.x * n.width;
-	const int32_t y = n.y * n.height;
+	const int32_t x = n->x * nodeSize;
+	const int32_t y = n->y * nodeSize;
 
 	//Fill
 	FillRect(
 		x,
 		y,
-		n.width,
-		n.height, color);
+		nodeSize,
+		nodeSize, color);
 
 	//Outline
 	DrawRect(
 		x,
 		y,
-		n.width,
-		n.height, black);
-
-	//DrawString(x, y, std::to_string(val), blue, 4);
+		nodeSize,
+		nodeSize, black);
 }
 
-void AStar::HandleMovement()
+void AStar::DebugNode()
 {
-	int32_t x = selectedNode % gridLength;
-	int32_t y = selectedNode / gridLength;
+	int32_t gridWidth = 0;
+	int32_t gridHeight = 0;
+
+	grid->GetGridDimensions(gridWidth, gridHeight);
+
+	int32_t x = debugNodeIndex % gridWidth;
+	int32_t y = debugNodeIndex / gridHeight;
 	
-	Node n = Node(x, y, 80, 80);
+	Node n = Node(x, y);
 	n.SetType(NodeType::Path);
-	DrawNode(n);
+	DrawNode(&n);
 
 	if (GetKey(olc::Key::UP).bPressed)
 	{
-		const int32_t temp = selectedNode - gridLength;
+		const int32_t temp = debugNodeIndex - gridWidth;
 		if (temp >= 0)
 		{
-			selectedNode = temp;
+			debugNodeIndex = temp;
 		}
 	}
 
 	if (GetKey(olc::Key::DOWN).bPressed)
 	{
-		const int32_t temp = selectedNode + gridLength;
-		if (temp < gridLength * gridLength)
+		const int32_t temp = debugNodeIndex + gridWidth;
+		if (temp < gridWidth * gridHeight)
 		{
-			selectedNode = temp;
+			debugNodeIndex = temp;
 		}
 	}
 
 	if (GetKey(olc::Key::LEFT).bPressed)
 	{
-		if (selectedNode % gridLength != 0)
+		if (debugNodeIndex % gridHeight != 0)
 		{
-			selectedNode = selectedNode - 1;
+			debugNodeIndex--;
 		}
 	}
 
 	if (GetKey(olc::Key::RIGHT).bPressed)
 	{
-		if ((selectedNode + 1) % gridLength != 0)
+		if ((debugNodeIndex + 1) % gridHeight != 0)
 		{
-			selectedNode = selectedNode + 1;
+			debugNodeIndex++;
 		}
 	}
 
 	if (GetKey(olc::Key::T).bHeld)
 	{
-		std::vector<int32_t> myVector = GetNeighbors(n);
+		std::vector<Node*> myVector;
+		grid->GetNeighbors(&n, myVector);
 
-		for (int32_t t : myVector)
+		for (Node* n : myVector)
 		{		
-			const int32_t sX = grid[t].x * grid[t].width;
-			const int32_t sY = grid[t].y * grid[t].height;
+			const int32_t sX = n->x * nodeSize + (nodeSize * 0.25f);
+			const int32_t sY = n->y * nodeSize + (nodeSize * 0.25f);
 			
 			DrawString(sX, sY, "N", blue, 4);
 		}
