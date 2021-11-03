@@ -119,5 +119,6 @@ int main()
 
 	return 0;
 }
+```
 
 This will first display "Jim Suzy Paul Andrew Sally John" and then "Suzy Paul Andrew Sally John". Because "Jim" was the top element, it is removed when we call "pop" 
