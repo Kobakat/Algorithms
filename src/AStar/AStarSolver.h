@@ -7,8 +7,12 @@ class Node;
 class AStarSolver 
 {
 public:
-	void Solve(AStarGrid* grid);
+
+	/** Solves a path. Returns true if a path was successfully found*/
+	bool Solve(AStarGrid* grid);
+
 	void SetPath() const;
+	void ShowScores(const bool bValue) const;
 
 	std::vector<Node*> open;
 	std::vector<Node*> closed;

@@ -66,28 +66,21 @@ void AStarGrid::GenerateGrid()
 	for (int i = 0; i < 2; i++)
 	{
 		const int32_t random = rand() % (availableNodes.size() - 1);
-		grid[availableNodes[random]]->SetType(NodeType::Target);
-		availableNodes.erase(availableNodes.begin() + random);
 
-		if (i == 0) startIndex = GetIndexOfNode(grid[availableNodes[random]]);
-		else endIndex = GetIndexOfNode(grid[availableNodes[random]]);
-	}
-
-	SetScores();
-}
-
-void AStarGrid::SetScores()
-{
-	Node* start = grid[startIndex];
-	Node* end = grid[endIndex];
-
-	for (Node* n : grid)
-	{
-		if (n->GetType() == NodeType::Empty)
+		if (i == 0)
 		{
-			n->gCost = GetDistanceBetweenNodes(n, start);
-			n->hCost = GetDistanceBetweenNodes(n, end);
+			Node* n = grid[availableNodes[random]];
+			startIndex = GetIndexOfNode(n);
+			n->SetType(NodeType::Start);
 		}
+		else
+		{
+			Node* n = grid[availableNodes[random]];
+			endIndex = GetIndexOfNode(n);
+			n->SetType(NodeType::Start);
+		}
+
+		availableNodes.erase(availableNodes.begin() + random);	
 	}
 }
 
@@ -128,14 +121,27 @@ void AStarGrid::GetNeighbors(Node* const n, std::vector<Node*>& outVector) const
 	{
 		for (int j = -1; j < 2; j++)
 		{
+			if (j == 0 && i == 0) continue; // dont select ourselves
+
 			x = j + n->x;
 			y = i + n->y;
 
 			if (x < 0 || y < 0 || x > gridWidth - 1 || y > gridHeight - 1) continue; // dont go out of bounds
-			if (j == 0 && i == 0) continue; // dont select ourselves
-
-			const int index = (y * gridWidth) + x;
+			
+			int index = (y * gridWidth) + x;
 			if (grid[index]->GetType() == NodeType::Block) continue; //dont accept blocks
+
+			//This space we are currently evaluating is not immediatly adjacent to us
+			if (j != 0 && i != 0)
+			{
+				int adjacentX = x + (j * -1);
+				int indexX = (y * gridWidth) + adjacentX;
+				if (grid[indexX]->GetType() == NodeType::Block) continue; // adjacent x tile is a block, cant cut the corner
+
+				int adjacentY = y + (i * -1);
+				int indexY = (adjacentY * gridWidth) + x;
+				if (grid[indexY]->GetType() == NodeType::Block) continue; // adjacent y tile is a block, cant cut the corner
+			}
 
 			outVector.push_back(grid[index]);
 		}

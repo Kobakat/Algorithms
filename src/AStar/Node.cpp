@@ -9,6 +9,7 @@ Node::Node(const int32_t X, const int32_t Y)
 	hCost = 0;
 
 	type = NodeType::Empty;
+	root = nullptr;
 }
 
 void Node::SetType(const NodeType Value)

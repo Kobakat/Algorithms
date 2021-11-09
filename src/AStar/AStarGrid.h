@@ -10,7 +10,6 @@ public:
 	~AStarGrid();
 	
 	void GenerateGrid();
-	void SetScores();
 
 	std::vector<Node*> grid;
 	

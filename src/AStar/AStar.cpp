@@ -8,6 +8,9 @@ const olc::Pixel white = olc::Pixel(olc::WHITE);
 const olc::Pixel black = olc::Pixel(olc::BLACK);
 const olc::Pixel green = olc::Pixel(olc::GREEN);
 const olc::Pixel blue = olc::Pixel(olc::BLUE);
+const olc::Pixel red = olc::Pixel(olc::DARK_RED);
+const olc::Pixel grey = olc::Pixel(olc::DARK_GREY);
+const olc::Pixel dgreen = olc::Pixel(olc::DARK_GREEN);
 
 AStar::AStar()
 {
@@ -19,7 +22,7 @@ bool AStar::OnUserCreate()
 	nodeSize = 40;
 	srand(time(nullptr));
 
-	grid = new AStarGrid(20, 20, 40);
+	grid = new AStarGrid(20, 20, 100);
 	solver = new AStarSolver();
 	
 	return true;
@@ -41,8 +44,11 @@ bool AStar::OnUserUpdate(float fDeltaTime)
 
 	if (GetKey(olc::Key::S).bPressed)
 	{
-		solver->Solve(grid);
-		solver->SetPath();
+		if (solver->Solve(grid))
+		{
+			solver->SetPath();
+			solver->ShowScores(true);
+		}	
 	}
 
 	for (Node* n : grid->grid)
@@ -65,6 +71,9 @@ void AStar::DrawNode(Node* const n)
 	case NodeType::Empty:
 		color = white;
 		break;
+	case NodeType::Start:
+		color = dgreen;
+		break;
 	case NodeType::Target:
 		color = green;
 		break;
@@ -73,6 +82,12 @@ void AStar::DrawNode(Node* const n)
 		break;
 	case NodeType::Path:
 		color = blue;
+		break;
+	case NodeType::Closed:
+		color = red;
+		break;
+	case NodeType::Open:
+		color = grey;
 		break;
 	}
 
@@ -92,6 +107,13 @@ void AStar::DrawNode(Node* const n)
 		y,
 		nodeSize,
 		nodeSize, black);
+
+	if (n->bDrawScores)
+	{
+		DrawString(x, y, std::to_string(n->gCost));
+		DrawString(x, y + 10, std::to_string(n->hCost));
+		DrawString(x, y + 20, std::to_string(n->fCost()));
+	}
 }
 
 void AStar::DebugNode()
