@@ -31,13 +31,13 @@ std::vector<int32_t> availableNodes;
 availableNodes.reserve(gridSize);
 
 //Generate grid
-for (int i = 0; i < gridLength; i++)
+for (int i = 0; i < gridHeight; i++)
 {
-    for (int j = 0; j < gridLength; j++)
-    {
-        grid.push_back(Node(j, i, sideLength, sideLength));
-        availableNodes.push_back(j+(i*10));
-    }
+	for (int j = 0; j < gridWidth; j++)
+	{
+		grid.push_back(new Node(j, i));
+		availableNodes.push_back(j + (i * gridWidth));
+	}
 }
 ```
 
@@ -65,37 +65,50 @@ All thats left is to select two more random spaces as our start and end point. F
 ## Determining cell neighbors
 
 Once we have our grid, we need to be able to get a list of every node that is an available neighbor of the provided node. This is quick and easy, all we have to
-do is check in a 3x3 space around the node and make sure that point meets three conditions:
+do is check in a 3x3 space around the node and make sure that point meets four conditions:
 
 - The point actually exists on the grid
-- The point isn't own position
+- The point isn't its own position
 - The point isn't in a barrier
+- If the point is a "corner" piece, we ignore it if a block adjacent to is a block. This prevents us from cutting corners
 
 ```cpp
-std::vector<int32_t> AStar::GetNeighbors(const Node n) const
+void AStarGrid::GetNeighbors(Node* const n, std::vector<Node*>& outVector) const
 {
-    std::vector<int32_t> neighbors;
+	outVector.clear();
 
-    int x = 0;
-    int y = 0;
+	int x = 0;
+	int y = 0;
 
-    for (int i = -1; i < 2; i++)
-    {
-        for (int j = -1; j < 2; j++)
-        {
-            x = j + n.x;
-            y = i + n.y;
+	for (int i = -1; i < 2; i++)
+	{
+		for (int j = -1; j < 2; j++)
+		{
+			if (j == 0 && i == 0) continue; // dont select ourselves
 
-            if (x < 0 || y < 0 || x > gridLength - 1 || y > gridLength - 1) continue; // dont go out of bounds
-            if (j == 0 && i == 0) continue; // dont select ourselves
+			x = j + n->x;
+			y = i + n->y;
 
-            const int index = (y * 10) + x;
-            if (grid[index].GetType() == NodeType::Block) continue; //dont accept blocks
+			if (x < 0 || y < 0 || x > gridWidth - 1 || y > gridHeight - 1) continue; // dont go out of bounds
+			
+			int index = (y * gridWidth) + x;
+			if (grid[index]->GetType() == NodeType::Block) continue; //dont accept blocks
 
-            neighbors.push_back(index);
-        }
-    }
-    return neighbors;
+			//This space we are currently evaluating is not immediatly adjacent to us
+			if (j != 0 && i != 0)
+			{
+				int adjacentX = x + (j * -1);
+				int indexX = (y * gridWidth) + adjacentX;
+				if (grid[indexX]->GetType() == NodeType::Block) continue; // adjacent x tile is a block, cant cut the corner
+
+				int adjacentY = y + (i * -1);
+				int indexY = (adjacentY * gridWidth) + x;
+				if (grid[indexY]->GetType() == NodeType::Block) continue; // adjacent y tile is a block, cant cut the corner
+			}
+
+			outVector.push_back(grid[index]);
+		}
+	}
 }
 ```
 
@@ -104,7 +117,95 @@ std::vector<int32_t> AStar::GetNeighbors(const Node n) const
 
 ## Finding the shortest path
 
-Coming soon!
+Now that we have a working grid and some visual fidelity, lets actually determine the most efficent route between two paths. We start by declaring two vectors that we will store
+open (unexplored) and closed (previously explored) nodes. As long as our open set contains any nodes, we will keep attempting to solve a path. If we find ourselves in a situation without any nodes, we can be certain a path does not exist.
+
+```cpp
+//Start by clearing the vectors and adding the starting node to the open set
+open.clear();
+closed.clear();
+
+open.emplace_back(startNode);
+```
+
+We start by selecting the first element in the open list and assigning it to a variable "guess". Then, we loop through every node in the open set and check which has the lowest fcost. Note that this particular method of searching for the lowest fcost node is rather naive and optimizations can be done to improve it.
+
+```cpp
+while (open.size() > 0)
+{
+	Node* guess = open[0];
+
+	//Check every other open node for the lowest cost
+	for (int i = 1; i < open.size(); i++)
+	{
+		//If the node's fcost is lower, thats our new guess. If the fcost is equal, we choose whichever has a lower hcost
+		if (open[i]->fCost() < guess->fCost() || 
+			(open[i]->fCost() == guess->fCost() && open[i]->hCost < guess->hCost))
+		{
+			guess = open[i];
+		}
+	}
+```
+
+Next we do a quick check to see if the node we just selected was the target node. If this is true, we have finished the path
+
+```cpp
+if (guess == endNode)
+{
+	startNode->SetType(NodeType::Start);
+	endNode->SetType(NodeType::Target);
+	return true;
+}
+```
+
+Otherwise, lets add this node to the closed set and remove it from the open before actually evaluating it
+
+```cpp
+open.erase(std::remove(open.begin(), open.end(), guess), open.end());
+closed.emplace_back(guess);
+```
+
+Now we can use our neighobrs function we implemented earlier. We can use this to figure out all the available nodes we can travel to, and decide which of those neighbor nodes is going to move us closest to the target node.
+
+```cpp
+std::vector<Node*> neighbors;
+grid->GetNeighbors(guess, neighbors);
+```
+
+The last step is to just determine which node moves us closest
+
+```cpp
+for (Node* n : neighbors)
+{
+	//Node is in closed list already, skip it
+	if (std::find(closed.begin(), closed.end(), n) != closed.end())
+	{
+		continue;
+	}
+
+	const bool bIsNotInOpen = std::find(open.begin(), open.end(), n) == open.end();
+	const int32_t distance = guess->gCost + grid->GetDistanceBetweenNodes(guess, n);
+
+	//Node is not in the open list, initialize costs and add it to the list
+	if (distance < n->gCost || bIsNotInOpen)
+	{
+		n->gCost = distance;
+		n->hCost = grid->GetDistanceBetweenNodes(n, endNode);
+		n->root = guess;
+
+		if (bIsNotInOpen)
+		{
+			open.emplace_back(n);
+			n->SetType(NodeType::Open);
+		}			
+	}			
+}
+```
+All that is left to do is run through this loop until we have found the path or determined none exists. We can visualize what a solved path looks like here.
+
+![Solved Path](https://github.com/Kobakat/Algorithms/blob/master/imgdump/Path.png)
+
+Grey boxes represent unevaluated nodes in the open set. Red boxes represent evaluated boxes in the closed set. And blue boxes represent evaluated boxes that make up the most efficent path.
 
 [**Engine Source**](https://github.com/OneLoneCoder/olcPixelGameEngine)
 
