@@ -6,4 +6,10 @@ This repository contains common algorithm concepts and implementations in C/C++ 
 
 [Understanding Big-O notation](https://github.com/Kobakat/Algorithms/tree/master/src/BigO)
 
+[The Fisher-Yates Shuffle](https://github.com/Kobakat/Algorithms/tree/master/src/Fisher-Yates)
+
+[Data Structures](https://github.com/Kobakat/Algorithms/tree/master/src/Data-Structures)
+
+[AStar pathfinding](https://github.com/Kobakat/Algorithms/tree/master/src/AStar)
+
 More to come soon!
