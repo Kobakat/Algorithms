@@ -28,10 +28,10 @@ void Heapify(std::vector<T>& collection, const Predicate& predicate, int i)
 template<typename T, class Predicate>
 void HeapSort(std::vector<T>& collection, const Predicate& predicate)
 {
-	if (collection.size() < 2)
-	{
-		return;
-	}
+    if (collection.size() < 2)
+    {
+        return;
+    }
 
     for (int i = collection.size() / 2 - 1; i >= 0; i--)
     {
