@@ -39,9 +39,9 @@ void HeapSort(std::vector<T>& collection, const Predicate& predicate)
     }
         
 
-    for (int i = collection.size() - 1; i > 0; i--) {
+    for (int i = collection.size() - 1; i > 0; i--) 
+    {
         Swap(collection[i], collection[0]);
-
         Heapify(collection, predicate, 0);
     }
 }
