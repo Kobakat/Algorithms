@@ -1,9 +1,9 @@
 # Searching
 
 Another one of the most common uses of algorithms is finding a desired element in an exisiting collection. There are several common approaches
-to this. I will be going over three of the most common: Linear, Binary, and Interpolation. Its important to note that search algorithms can have
-many different return values such as a bool (does the target element exist?), an int (the index of the element in the collection), or a pointer
-(the actual object exisiting at the target). In these examples I'm simply going to return a boolean stating whether or not the element is contained
+to this. I will be going over three of the most common: Linear, Binary, and Interpolation. It is important to note that search algorithms can have
+many different return values such as a bool (does the target element exist?), an int (the index of the found element in the collection), or a pointer
+(the actual target object exisiting at the specified target). In these examples I'm simply going to return a boolean stating whether or not the element is contained
 in the provided collection.
 
 ## Linear
@@ -14,7 +14,9 @@ true if we find one. Linear search benefits from being super easy and intuitive 
 ### Time complexities
 
 **Worst Case:** O(N) - Worst case scenario occurs when the element we are looking for is the last in the collection
+
 **Best Case:** O(1) - Best case scenario occurs when the element we are looking for is the first in the collection
+
 **Average Case:** O(N/2) - On average the target element is found in the middle of the collection
 
 ```cpp
@@ -36,12 +38,14 @@ bool LinearSearch(const std::vector<T>& Container, T target)
 
 Binary search works by continually cutting the search length into halves until the element is found or none remain.
 This only works on the assumption that the provided collection has already been sorted. If you haven't seen my
-page for sorting algorithms, you can check that out $[**here**](link). Additionally, in order to maintain our wonderful
+page for sorting algorithms, you can check that out [**here**](https://github.com/Kobakat/Algorithms/tree/master/src/Sorting). Additionally, in order to maintain our wonderful
 portable template functions, we need to provide a predicate function that defines HOW the collection is sorted. In this 
 example case I will be providing a sorted vector of integers from smallest to largest.
 
 **Worst Case:** O(Log(N)) - Worst case scenario occurs when the element we are looking for requires us to split a floored log(n) times
+
 **Best Case:** O(1) - Best case scenario occurs when the element we are looking for is the first middle value in the collection
+
 **Average Case:** O(Log(N)) - The calculus behind this proof is a bit out of scope for this readme, but there are many proofs you can look into online
 
 ```cpp
@@ -100,7 +104,9 @@ tries to find a splitting point close the the target value by using a special fo
 
 
 **Worst Case:** O(N) - Worst case scenario occurs when the distribution is completely random and we have to search every element
+
 **Best Case:** O(1) - The best case scenario occurs when the element we are looking for is the first middle value in the collection
+
 **Average Case:** O(Log(Log(N))) - The average case occurs when the elements in our array are uniformly distributed
 
 ```cpp
@@ -148,4 +154,3 @@ bool BinarySearch(const std::vector<T>& Container, T target, const Predicate& So
 	return false;
 }
 ```
-
