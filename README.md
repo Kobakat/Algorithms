@@ -16,6 +16,8 @@ This repository contains common algorithm concepts and implementations in C/C++ 
 
 [Searching](https://github.com/Kobakat/Algorithms/tree/master/src/Searching)
 
+[Trees](https://github.com/Kobakat/Algorithms/tree/master/src/Trees)
+
 [Inverse Kinematics](https://github.com/Kobakat/Algorithms/tree/master/src/FABRIK)
 
 More to come soon!
