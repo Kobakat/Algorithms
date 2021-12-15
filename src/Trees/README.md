@@ -135,7 +135,7 @@ int main()
     root->Insert("hello");
 
     std::cout << (root->Search("hello") ? "True" : "False") << std::endl; //should be true since we added this
-    std::cout << (root->Search("hel") ? "True" : "False") << std::endl; //should be true because hello is comprised of hello
+    std::cout << (root->Search("hel") ? "True" : "False") << std::endl; //should be true because hel is comprised of hello
     std::cout << (root->Search("greetings") ? "True" : "False") << std::endl; //should be false we did not insert this key
 
     delete root;
