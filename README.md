@@ -1,6 +1,6 @@
 # Algorithms
 
-This repository contains common algorithm concepts and implementations in C/C++ as well as notes on their time/space complexity. The src folder *will* contain many subdirectories that describe the type of algorithms contained inside. Each source file will explicitly state the name of the algorithm they implement.
+This repository contains common algorithm concepts and implementations in C/C++ as well as notes on their time/space complexity. The src folder contains many subdirectories that describe the type of algorithms contained inside.
 
 ## Table of Contents
 
@@ -19,5 +19,3 @@ This repository contains common algorithm concepts and implementations in C/C++ 
 [Trees](https://github.com/Kobakat/Algorithms/tree/master/src/Trees)
 
 [Inverse Kinematics](https://github.com/Kobakat/Algorithms/tree/master/src/FABRIK)
-
-More to come soon!
